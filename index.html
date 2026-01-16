@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Pagamento Pix</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+    --vermelho:#fb5533;
+    --vermelho-escuro:#d73211;
+    --cinza:#777;
+    --borda:#e5e5e5;
+}
+
+*{
+    box-sizing:border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+    margin:0;
+    background:#ffffff;
+    color:#333;
+}
+
+/* SPLASH */
+#splash{
+    position:fixed;
+    inset:0;
+    background:#ffffff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+}
+#splash img{width:120px}
+
+/* TOPO */
+.header{
+    background:linear-gradient(90deg,var(--vermelho),#ff6a3a);
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+}
+.header img{height:34px}
+
+/* CONTAINER */
+.container{
+    max-width:420px;
+    margin:18px auto;
+    padding:16px;
+}
+
+/* TEXTO */
+.title{font-size:16px;margin-bottom:12px}
+.row{
+    display:flex;justify-content:space-between;
+    font-size:14px;padding:6px 0
+}
+.row strong{color:var(--vermelho)}
+.timer{
+    font-size:13px;color:var(--vermelho);
+    margin:10px 0 16px
+}
+
+/* PIX */
+.pix-box{
+    text-align:center;
+    border-top:1px solid var(--borda);
+    border-bottom:1px solid var(--borda);
+    padding:18px 0;
+}
+
+/* QR CENTRALIZADO */
+#qrcode{
+    display:flex;
+    justify-content:center;
+    margin:12px 0;
+}
+
+/* BOTÕES */
+button{
+    width:100%;
+    padding:11px;
+    border-radius:4px;
+    border:1px solid var(--vermelho);
+    background:#fff;
+    color:var(--vermelho);
+    font-size:14px;
+    cursor:pointer;
+}
+button:hover{background:var(--vermelho);color:#fff}
+
+button.primary{
+    background:var(--vermelho);
+    color:#fff;
+    border:none;
+    margin-top:12px;
+}
+button.primary:hover{background:var(--vermelho-escuro)}
+button:disabled{
+    background:#eee;color:#999;
+    border:1px solid #ddd;cursor:not-allowed
+}
+
+/* LISTA */
+.instructions{
+    font-size:13px;margin:16px 0;
+    padding-left:18px
+}
+.instructions li{margin-bottom:6px}
+
+/* EXPIRADO */
+.expired{
+    text-align:center;
+    color:#d32f2f;
+    font-weight:bold;
+    margin-top:14px;
+    display:none;
+}
+
+/* RODAPÉ */
+.footer{
+    margin-top:18px;
+    text-align:center;
+    font-size:11px;
+    color:#777;
+}
+.footer strong{color:#555}
+
+@media(max-width:480px){
+    .container{padding:12px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+    <img src="./logo1.jpeg" alt="Logo">
+</div>
+
+<!-- TOPO -->
+<div class="header">
+    <img src="./logo.jpeg" alt="Logo">
+</div>
+
+<div class="container">
+
+<div class="title">Pagamento</div>
+
+<div class="row">
+    <span>Pagamento Total</span>
+    <strong>R$ 287,00</strong>
+</div>
+
+<div class="timer">
+    Pagar em até <strong><span id="tempo">10:00</span></strong>
+</div>
+
+<div class="pix-box">
+    <div><strong>Pix</strong></div>
+
+    <!-- QR CODE GERADO AUTOMATICAMENTE -->
+    <div id="qrcode"></div>
+
+    <!-- CÓDIGO PIX (EDITE AQUI) -->
+    <pre id="codigo" style="display:none;">
+00020101021226790014br.gov.bcb.pix2557qrcode.mwbank.com.br/cob/0ea2eeda42e1468595673a8fa6bc3fba5204000053039865802BR5916IVI GATEWAY LTDA6009JOINVILLE62070503***6304DCB6    </pre>
+
+    <button id="copiar">Copiar código Pix</button>
+</div>
+
+<ul class="instructions">
+    <li>Acesse o aplicativo do seu banco.</li>
+    <li>Escolha pagar via Pix.</li>
+    <li>Escaneie o QR Code ou cole o código.</li>
+    <li>Após pagar, retorne ao chat e envie o comprovante.</li>
+</ul>
+
+<button id="okBtn" class="primary">OK</button>
+
+<div id="expirado" class="expired">
+    Tempo expirado. Gere um novo pagamento.
+</div>
+
+<div class="footer">
+    <div><strong>CNPJ:</strong> 35.635.824/0001-12</div>
+    <div>Ambiente seguro • Pagamento protegido • Dados criptografados</div>
+</div>
+
+</div>
+
+<!-- BIBLIOTECA QR CODE LOCAL -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+/* SPLASH 3s */
+window.onload = () => {
+    setTimeout(()=>{
+        document.getElementById("splash").style.display = "none";
+    },3000);
+
+    gerarQRCode();
+};
+
+/* GERAR QR CODE A PARTIR DO PIX */
+function gerarQRCode(){
+    const codigoPix = document.getElementById("codigo").textContent.trim();
+    const qrDiv = document.getElementById("qrcode");
+    qrDiv.innerHTML = "";
+
+    new QRCode(qrDiv,{
+        text: codigoPix,
+        width:220,
+        height:220
+    });
+}
+
+/* CONTADOR */
+let tempo = 600;
+const elTempo = document.getElementById("tempo");
+const btnCopiar = document.getElementById("copiar");
+const expirado = document.getElementById("expirado");
+
+const intervalo = setInterval(()=>{
+    const m = Math.floor(tempo/60);
+    const s = tempo%60;
+
+    elTempo.textContent =
+        String(m).padStart(2,"0")+":"+
+        String(s).padStart(2,"0");
+
+    if(tempo <= 0){
+        clearInterval(intervalo);
+        btnCopiar.disabled = true;
+        expirado.style.display = "block";
+    }
+    tempo--;
+},1000);
+
+/* COPIAR PIX */
+btnCopiar.onclick = () => {
+    navigator.clipboard.writeText(
+        document.getElementById("codigo").textContent.trim()
+    );
+    btnCopiar.textContent = "Código copiado";
+};
+
+/* OK → VOLTAR PARA WHATSAPP */
+document.getElementById("okBtn").onclick = () => {
+    const origem = document.referrer;
+    if (origem && (origem.includes("wa.me") || origem.includes("whatsapp"))) {
+        window.location.href = origem;
+    } else {
+        window.location.href = "https://wa.me/";
+    }
+};
+</script>
+
+</body>
+</html>
